@@ -404,6 +404,7 @@ public:
         return compare;
     }
 
+    static void smp_barrier() { smp_barrier(cores()); }
     static void smp_barrier(unsigned long cores = cores()) { CPU_Common::smp_barrier<&finc>(cores, id()); }
 
     static void flush_tlb() { ASM("movl %cr3, %eax"); ASM("movl %eax, %cr3"); }
