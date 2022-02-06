@@ -734,59 +734,59 @@ void Setup::enable_paging()
         db<Setup>(INF) << "sp=" << CPU::sp() << endl;
     }
 
-#ifdef __arch_armv7__
+    #ifdef __arch_armv7__
 
-    // MNG_DOMAIN for no page permission verification, CLI_DOMAIN otherwise
-    CPU::dacr((Traits<System>::multitask) ? CPU::CLI_DOMAIN : CPU::MNG_DOMAIN); 
+        // MNG_DOMAIN for no page permission verification, CLI_DOMAIN otherwise
+        CPU::dacr((Traits<System>::multitask) ? CPU::CLI_DOMAIN : CPU::MNG_DOMAIN); 
 
-    CPU::dsb();
-    CPU::isb();
+        CPU::dsb();
+        CPU::isb();
 
-    // Clear TTBCR for the system to use ttbr0 instead of 1
-    CPU::ttbcr(0);
-    // Set ttbr0 with base address
-    CPU::ttbr0((Traits<System>::multitask) ? si->pmm.sys_pd : FLAT_PAGE_TABLE);
+        // Clear TTBCR for the system to use ttbr0 instead of 1
+        CPU::ttbcr(0);
+        // Set ttbr0 with base address
+        CPU::ttbr0((Traits<System>::multitask) ? si->pmm.sys_pd : FLAT_PAGE_TABLE);
 
-    // Enable MMU through SCTLR and ACTLR
-    CPU::actlr(CPU::actlr() | CPU::SMP); // Set SMP bit
-    CPU::sctlr((CPU::sctlr() | CPU::DCACHE | CPU::ICACHE | CPU::MMU_ENABLE) & ~(CPU::AFE));
+        // Enable MMU through SCTLR and ACTLR
+        CPU::actlr(CPU::actlr() | CPU::SMP); // Set SMP bit
+        CPU::sctlr((CPU::sctlr() | CPU::DCACHE | CPU::ICACHE | CPU::MMU_ENABLE) & ~(CPU::AFE));
 
-    CPU::dsb();
-    CPU::isb();
+        CPU::dsb();
+        CPU::isb();
 
-    // MMU now enabled - Virtual address system now active
-    // Branch Prediction Enable
-    CPU::sctlr(CPU::sctlr() | (1 << 11)); // Z bit
+        // MMU now enabled - Virtual address system now active
+        // Branch Prediction Enable
+        CPU::sctlr(CPU::sctlr() | (1 << 11)); // Z bit
 
-    // Flush TLB to ensure we've got the right memory organization
-    MMU::flush_tlb();
+        // Flush TLB to ensure we've got the right memory organization
+        MMU::flush_tlb();
 
-    // Adjust pointers that will still be used to their logical addresses
-    Display::init(); // adjust the pointers in Display by calling init 
+        // Adjust pointers that will still be used to their logical addresses
+        Display::init(); // adjust the pointers in Display by calling init 
 
-    if(Traits<Setup>::hysterically_debugged) {
-        db<Setup>(INF) << "pc=" << CPU::pc() << endl;
-        db<Setup>(INF) << "sp=" << CPU::sp() << endl;
-    }
+        if(Traits<Setup>::hysterically_debugged) {
+            db<Setup>(INF) << "pc=" << CPU::pc() << endl;
+            db<Setup>(INF) << "sp=" << CPU::sp() << endl;
+        }
 
-#else 
+    #else 
 
-    // Configure paging with two levels and 16KB pages via TTBRC
-    CPU::ttbcr(CPU::TTBR1_DISABLE | CPU::TTBR0_WALK_INNER_SHAREABLE | CPU::TTBR0_WALK_OUTER_WB_WA | CPU::TTBR0_WALK_INNER_WB_WA | CPU::TTBR0_TG0_16KB | CPU::TTBR0_SIZE_4GB);
-    CPU::isb();
+        // Configure paging with two levels and 16KB pages via TTBRC
+        CPU::ttbcr(CPU::TTBR1_DISABLE | CPU::TTBR0_WALK_INNER_SHAREABLE | CPU::TTBR0_WALK_OUTER_WB_WA | CPU::TTBR0_WALK_INNER_WB_WA | CPU::TTBR0_TG0_16KB | CPU::TTBR0_SIZE_4GB);
+        CPU::isb();
 
-    // Tell the MMU where our translation tables are
-    db<Setup>(INF) << "SYS_PD=" << hex << (unsigned long)((Traits<System>::multitask) ? si->pmm.sys_pd : FLAT_PAGE_TABLE) << endl;
-    CPU::ttbr0((unsigned long)((Traits<System>::multitask) ? si->pmm.sys_pd : FLAT_PAGE_TABLE));
+        // Tell the MMU where our translation tables are
+        db<Setup>(INF) << "SYS_PD=" << hex << (unsigned long)((Traits<System>::multitask) ? si->pmm.sys_pd : FLAT_PAGE_TABLE) << endl;
+        CPU::ttbr0((unsigned long)((Traits<System>::multitask) ? si->pmm.sys_pd : FLAT_PAGE_TABLE));
 
-    CPU::dsb();
-    CPU::isb();
+        CPU::dsb();
+        CPU::isb();
 
-    CPU::sctlr(CPU::sctlr() | CPU::MMU_ENABLE | CPU::DCACHE | CPU::ICACHE);
-    CPU::isb();
+        CPU::sctlr(CPU::sctlr() | CPU::MMU_ENABLE | CPU::DCACHE | CPU::ICACHE);
+        CPU::isb();
 
-    Display::init();
-#endif
+        Display::init();
+    #endif
 }
 
 void Setup::load_parts()
@@ -1042,6 +1042,39 @@ void _entry()
     ASM("b _reset");
 }
 
+void _reset()
+{
+    if(CPU::id() == 0) {
+        // Relocated the vector table, which has 4 entries for each of the 4 scenarios, all 128 bytes aligned, plus an 8 bytes pointer, totaling 2056 bytes
+        CPU::Reg * src = reinterpret_cast<CPU::Reg *>(&_vector_table);
+        CPU::Reg * dst = reinterpret_cast<CPU::Reg *>(Memory_Map::VECTOR_TABLE);
+        for(int i = 0; i < (2056 / 8); i++)
+            dst[i] = src[i];
+        // Set el1 vbar
+        CPU::vbar_el1(static_cast<CPU::Phy_Addr>(Memory_Map::VECTOR_TABLE));
+
+        // Activate aarch64
+        CPU::hcr(CPU::EL1_AARCH64_EN | CPU::SWIO_HARDWIRED);
+
+        // We start at EL2, but must set EL1 SP for a smooth transition, including further exception/interrupt handling
+        CPU::spsr_el2(CPU::FLAG_D | CPU::FLAG_A | CPU::FLAG_I | CPU::FLAG_F | CPU::FLAG_EL1 | CPU::FLAG_SP_ELn);
+        CPU::Reg el1_addr = CPU::pc();
+        el1_addr += 16; // previous instruction, this instruction, and the next one;
+        CPU::elr_el2(el1_addr);
+        CPU::eret();
+        CPU::sp(Memory_Map::BOOT_STACK + Traits<Machine>::STACK_SIZE * (CPU::id() + 1)); // set stack
+
+        // Clear the BSS (SETUP was linked to CRT0, but entry point didn't go through BSS clear)
+        Machine::clear_bss();
+    } else {
+        // we want secondary cores to be held here.
+        while(true)
+            CPU::halt();
+    }
+
+    _setup();
+}
+
 void _vector_table()
 {
     // Manual D1.10.2, page D1-1430 shows four configurations in terms of the exception level an exception can came from:
@@ -1184,39 +1217,6 @@ void _vector_table()
                                                                                 \t\n\
                         .balign 128                                             \t\n\
         .ic_entry: .dword 0x0                                                   \t");
-}
-
-void _reset()
-{
-    if(CPU::id() == 0) {
-        // Relocated the vector table, which has 4 entries for each of the 4 scenarios, all 128 bytes aligned, plus an 8 bytes pointer, totaling 2056 bytes
-        CPU::Reg * src = reinterpret_cast<CPU::Reg *>(&_vector_table);
-        CPU::Reg * dst = reinterpret_cast<CPU::Reg *>(Memory_Map::VECTOR_TABLE);
-        for(int i = 0; i < (2056 / 8); i++)
-            dst[i] = src[i];
-        // Set el1 vbar
-        CPU::vbar_el1(static_cast<CPU::Phy_Addr>(Memory_Map::VECTOR_TABLE));
-
-        // Activate aarch64
-        CPU::hcr(CPU::EL1_AARCH64_EN | CPU::SWIO_HARDWIRED);
-
-        // We start at EL2, but must set EL1 SP for a smooth transition, including further exception/interrupt handling
-        CPU::spsr_el2(CPU::FLAG_D | CPU::FLAG_A | CPU::FLAG_I | CPU::FLAG_F | CPU::FLAG_EL1 | CPU::FLAG_SP_ELn);
-        CPU::Reg el1_addr = CPU::pc();
-        el1_addr += 16; // previous instruction, this instruction, and the next one;
-        CPU::elr_el2(el1_addr);
-        CPU::eret();
-        CPU::sp(Memory_Map::BOOT_STACK + Traits<Machine>::STACK_SIZE * (CPU::id() + 1)); // set stack
-
-        // Clear the BSS (SETUP was linked to CRT0, but entry point didn't go through BSS clear)
-        Machine::clear_bss();
-    } else {
-        // we want secondary cores to be held here.
-        while(true)
-            CPU::halt();
-    }
-
-    _setup();
 }
 
 #endif

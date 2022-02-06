@@ -44,11 +44,13 @@ public:
     static const unsigned int SETUP             = library ? NOT_USED : RESET;
 
     // Logical Memory Map
+    static const unsigned int DIR_SIZE          = (armv7 ? 4 : 32) * 1024 * 1024;
     static const unsigned int APP_LOW           = library ? RESET : 0x80000000;
     static const unsigned int APP_HIGH          = APP_LOW + (RAM_TOP - RAM_BASE) - 1;
 
     static const unsigned int APP_CODE          = library ? RESET : APP_LOW;
-    static const unsigned int APP_DATA          = APP_CODE + (armv7 ? 4 : 32) * 1024 * 1024;
+    static const unsigned int APP_DATA          = APP_CODE + DIR_SIZE;
+    static const unsigned int APP_HEAP          = APP_DATA + DIR_SIZE;
 
     static const unsigned int INIT              = library ? NOT_USED : 0x00200000;
     static const unsigned int PHY_MEM           = 0x00000000;   // 0 (max 1792 MB)
