@@ -245,8 +245,8 @@ public:
     using ARMv7_A::min_clock;
     using ARMv7_A::bus_clock;
 
-    static void int_enable() { cpsr(cpsr() & ~(FLAG_F | FLAG_I)); }
-    static void int_disable() { cpsr(cpsr() | (FLAG_F | FLAG_I)); }
+    static void int_enable() {}// cpsr(cpsr() & ~(FLAG_F | FLAG_I)); }
+    static void int_disable() {} // cpsr(cpsr() | (FLAG_F | FLAG_I)); }
 
     static bool int_enabled() { return !int_disabled(); }
     static bool int_disabled() { return cpsr() & (FLAG_F | FLAG_I); }

@@ -9,22 +9,22 @@ unsigned int CPU::_bus_clock;
 
 void CPU::Context::load() const volatile
 {
-    sp(this);
-    Context::pop();
+    // sp(this);
+    // Context::pop();
 }
 
 void CPU::switch_context(Context ** o, Context * n)
 {
-    // Push the context into the stack and update "o"
-    Context::push();
-    *o = sp();
+    // // Push the context into the stack and update "o"
+    // Context::push();
+    // *o = sp();
 
-    // Set the stack pointer to "n" and pop the context
-    sp(n);
-    Context::pop();
+    // // Set the stack pointer to "n" and pop the context
+    // sp(n);
+    // Context::pop();
 
-    // Cross-domain return point used in save_regs()
-    iret();
+    // // Cross-domain return point used in save_regs()
+    // iret();
 }
 
 __END_SYS
