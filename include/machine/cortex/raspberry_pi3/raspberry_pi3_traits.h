@@ -51,7 +51,6 @@ public:
 
     static const unsigned int APP_CODE          = APP_LOW;
     static const unsigned int APP_DATA          = APP_CODE + DIR_SIZE;
-    static const unsigned int APP_HEAP          = APP_DATA + DIR_SIZE;
 
     static const unsigned int INIT              = library ? NOT_USED : 0x00200000;
     static const unsigned int PHY_MEM           = 0x00000000;   // 0 (max 1792 MB)

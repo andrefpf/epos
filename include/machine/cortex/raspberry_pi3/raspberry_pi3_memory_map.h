@@ -49,6 +49,7 @@ public:
 
         APP_CODE        = Traits<Machine>::APP_CODE,
         APP_DATA        = Traits<Machine>::APP_DATA,
+        APP_HEAP        = 0xA0000000,
 
         PHY_MEM         = Traits<Machine>::PHY_MEM,
         IO              = Traits<Machine>::IO,
