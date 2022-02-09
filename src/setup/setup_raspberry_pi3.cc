@@ -1089,6 +1089,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1097,6 +1098,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1105,6 +1107,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1113,6 +1116,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1122,6 +1126,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1130,6 +1135,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1138,6 +1144,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1146,6 +1153,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1155,6 +1163,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1163,6 +1172,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1171,6 +1181,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1179,6 +1190,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1188,6 +1200,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1196,6 +1209,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1204,6 +1218,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
@@ -1212,6 +1227,7 @@ void _vector_table()
                         str x29, [sp,#-8]!                                      \t\n\
                         ldr x29, .ic_entry                                      \t\n\
                         blr x29                                                 \t\n\
+                        ldr x29, [sp], #8                                       \t\n\
                         ldr x30, [sp], #8                                       \t\n\
                         eret                                                    \t\n\
                                                                                 \t\n\
