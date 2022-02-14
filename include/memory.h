@@ -10,6 +10,7 @@ __BEGIN_SYS
 class Address_Space: private MMU::Directory
 {
     friend class Init_System;   // for Address_Space(pd)
+    friend class Task;          // for Address_Space(pd)
     friend class Thread;        // for Address_Space(pd)
     friend class Scratchpad;    // for Address_Space(pd)
 

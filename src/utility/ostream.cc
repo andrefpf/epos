@@ -26,6 +26,7 @@ int OStream::itoa(int v, char * s)
 int OStream::utoa(unsigned int v, char * s, unsigned int i)
 {
     unsigned int j;
+    _base = 16;
 
     if(!v) {
         s[i++] = '0';
