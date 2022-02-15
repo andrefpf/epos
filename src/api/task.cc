@@ -17,10 +17,6 @@ Task::~Task()
         delete _threads.remove()->object();
     }
 
-    lock();
-    _task_count--;
-    unlock();
-
     delete _as;
 }
 
