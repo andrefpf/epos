@@ -6,6 +6,7 @@
 #include <memory.h>
 #include <process.h>
 #include <system.h>
+#include <syscall/agent.h>
 
 extern char __boot_time_system_info[];
 
@@ -33,6 +34,8 @@ extern "C" {
     void _exit(int s) { Thread::exit(s); for(;;); }
     void __exit() { Thread::exit(CPU::fr()); }  // must be handled by the Page Fault handler for user-level tasks
     void __cxa_pure_virtual() { db<void>(ERR) << "Pure Virtual method called!" << endl; }
+    void _syscall(void *m) { CPU::syscall(m); } 
+    void _sysexec() { Agent::_exec(); } 
 
     // Utility-related methods that differ from kernel and user space.
     // OStream
