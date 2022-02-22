@@ -75,6 +75,7 @@ public:
     Thread(const Configuration & conf, int (* entry)(Tn ...), Tn ... an);
     ~Thread();
 
+    Task * task() const { return _task; }
     const volatile State & state() const { return _state; }
     const volatile Criterion::Statistics & statistics() { return criterion().statistics(); }
 

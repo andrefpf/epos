@@ -29,6 +29,7 @@ public:
         Address() {}
         Address(const Address & a) : _addr(a._addr) {}
         Address(const Reg & a) : _addr(a) {}
+        
         template<typename T>
         Address(T * a) : _addr(Reg(a)) {}
 
