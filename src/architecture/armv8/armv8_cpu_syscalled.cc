@@ -2,13 +2,15 @@
 
 #include <architecture/armv8/armv8_cpu.h>
 
-extern "C" { void _sysexec(); }
+extern "C" { void _sysexec(void * msg); }
 
 __BEGIN_SYS
 
-void CPU::syscalled()
-{
-    db<CPU>(INF) << "CPU::syscalled()" << endl;
+void CPU::syscalled(void * msg = 0) {
+    db<CPU>(INF) << "CPU::syscalled(" << msg << ")" << endl;
+
+    if (msg)
+        _sysexec(msg);
 }
 
 __END_SYS

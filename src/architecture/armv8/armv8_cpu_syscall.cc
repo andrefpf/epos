@@ -7,6 +7,7 @@ __BEGIN_SYS
 void CPU::syscall(void * msg)
 {
     db<CPU>(INF) << "CPU::syscall(" << msg << ")" << endl;
+    CPU::r1(reinterpret_cast<CPU::Reg>(msg));
     CPU::svc();
 }
 

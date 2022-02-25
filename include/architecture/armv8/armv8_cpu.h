@@ -494,8 +494,8 @@ public:
     template<typename ... Tn>
     static Log_Addr init_user_stack(Log_Addr usp, void (* exit)(), Tn ... an) { return usp; }
 
-    static void syscall(void * message);
-    static void syscalled();
+    static void syscall(void * msg);
+    static void syscalled(void * msg);
 
     using CPU_Common::htole64;
     using CPU_Common::htole32;

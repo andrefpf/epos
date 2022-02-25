@@ -1,9 +1,9 @@
 #!/bin/bash
 
 tmux kill-session -t foo
-tmux new -s foo 'qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -smp 4 -gdb tcp::1236 -S -m 1G -serial null -serial mon:stdio -nographic -no-reboot -device loader,file=img/test_task.img,addr=0x600000,force-raw=on -kernel img/test_task.bin | tee img/test_task.out &
+tmux new -s foo 'qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -smp 4 -gdb tcp::1236 -S -m 1G -serial null -serial mon:stdio -nographic -no-reboot -device loader,file=img/test_syscall.img,addr=0x600000,force-raw=on -kernel img/test_syscall.bin | tee img/test_syscall.out &
 konsole -e aarch64-linux-gnu-gdb -ex "target remote:1236" -ex "set confirm off" \
--ex "add-symbol-file ./app/test_task/test_task" \
+-ex "add-symbol-file ./app/test_syscall/test_syscall" \
 -ex "add-symbol-file ./img/setup_raspberry_pi3" \
 -ex "add-symbol-file ./img/system_raspberry_pi3" \
 -ex "add-symbol-file ./img/init_raspberry_pi3" \

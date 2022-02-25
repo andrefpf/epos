@@ -141,18 +141,19 @@ void IC::entry()
          stp    x4,  x5, [sp, #-16]!                                     \t\n\
          stp    x2,  x3, [sp, #-16]!                                     \t\n\
          stp    x0,  x1, [sp, #-16]!                                     \t\n\
-         mrs x30, elr_el1                                               \t\n\
+         mrs x30, elr_el1                                                \t\n\
          str        x30, [sp, # -8]!                                     \t\n\
-         mrs x30, spsr_el1                                              \t\n\
+         mrs x30, spsr_el1                                               \t\n\
          str        x30, [sp, # -8]!                                     \t" : : : "cc");
 
+    void * msg = reinterpret_cast<void *>(CPU::r1());
     unsigned int i = int_id();
 
-    if ((i >= INTS) && (CPU::esr_el1() >> 26 == 0x15)) {
-        CPU::syscalled();
+    if (CPU::esr_el1() >> 26 == 0x15) {
+        CPU::esr_el1(0);
         CPU::int_enable();
+        CPU::syscalled(msg);
     } else {
-        db<IC>(INF) << "uma interrupção qualquer" << endl;
         dispatch(i);
     }
 
