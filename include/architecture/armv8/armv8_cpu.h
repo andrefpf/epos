@@ -294,6 +294,8 @@ public:
 
     static void mode(unsigned int m) { ASM("msr currentel, %0" : : "r"(m) : "cc"); }
 
+    static void svc() { ASM("svc #0"); }
+
     static void svc_enter(unsigned int from, bool ret = true) {}
 
     static void svc_leave() {}
@@ -330,6 +332,9 @@ public:
 
     static Reg spsr_el2() { Reg r; ASM("mrs %0, spsr_el2" : "=r"(r) :); return r; }
     static void spsr_el2(Reg r) { ASM("msr spsr_el2, %0" : : "r"(r) :); }
+
+    static Reg esr_el1() { Reg r; ASM("mrs %0, esr_el1" : "=r"(r) :); return r; }
+    static void esr_el1(Reg r) { ASM("msr esr_el1, %0" : : "r"(r) :); }
 
     static Reg spsr_el1() { Reg r; ASM("mrs %0, spsr_el1" : "=r"(r) :); return r; }
     static void spsr_el1(Reg r) { ASM("msr spsr_el1, %0" : : "r"(r) :); }

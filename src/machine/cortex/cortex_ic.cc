@@ -146,7 +146,15 @@ void IC::entry()
          mrs x30, spsr_el1                                              \t\n\
          str        x30, [sp, # -8]!                                     \t" : : : "cc");
 
-    dispatch(int_id());
+    unsigned int i = int_id();
+
+    if ((i >= INTS) && (CPU::esr_el1() >> 26 == 0x15)) {
+        CPU::syscalled();
+        CPU::int_enable();
+    } else {
+        db<IC>(INF) << "uma interrupção qualquer" << endl;
+        dispatch(i);
+    }
 
     ASM("ldr         x30, [sp], #8                                       \t\n\
          msr  spsr_el1, x30                                              \t\n\
