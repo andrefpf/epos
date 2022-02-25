@@ -7,7 +7,7 @@ extern "C" { void _sysexec(void * msg); }
 __BEGIN_SYS
 
 void CPU::syscalled(void * msg = 0) {
-    db<CPU>(INF) << "CPU::syscalled(" << msg << ")" << endl;
+    db<Syscall>(INF) << "CPU::syscalled(" << msg << ") \t Exception Level: " << CPU::el() << endl;
 
     if (msg)
         _sysexec(msg);

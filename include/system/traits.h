@@ -158,6 +158,7 @@ template<typename Component> class Proxy;
 template<typename Component> class Adapter;
 template<typename Component> class Scenario;
 class Agent;
+class Syscall;
 
 // Aspects
 class Aspect;

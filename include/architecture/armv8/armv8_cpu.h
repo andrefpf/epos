@@ -269,6 +269,12 @@ public:
     static void fpu_restore();
 
     // ARMv8 specifics
+    static unsigned int el() {
+        Reg el;
+        ASM("mrs %0, CurrentEL" : "=r"(el) : : );
+        return el >> 2;
+    }
+
     static Reg  r0() { Reg r; ASM("mov %0, x0" :  "=r"(r) : : ); return r; }
     static void r0(Reg r) {   ASM("mov x0, %0" : : "r"(r): ); }
 

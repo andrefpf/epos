@@ -20,7 +20,7 @@ template<> struct Traits<Build>: public Traits_Tokens
     // Default flags
     static const bool enabled = true;
     static const bool monitored = false;
-    static const bool debugged = true;
+    static const bool debugged = false;
     static const bool hysterically_debugged = false;
 
     // Default aspects
@@ -131,6 +131,18 @@ template<> struct Traits<Thread>: public Traits<Build>
 
     typedef RR Criterion;
     static const unsigned int QUANTUM = 10000; // us
+};
+
+template<> struct Traits<Agent>: public Traits<Build>
+{
+    static const bool enabled = true;
+    static const bool debugged = true;
+};
+
+template<> struct Traits<Syscall>: public Traits<Build>
+{
+    static const bool enabled = true;
+    static const bool debugged = true;
 };
 
 template<> struct Traits<Scheduler<Thread>>: public Traits<Build>

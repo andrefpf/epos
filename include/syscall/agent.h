@@ -91,7 +91,7 @@ private:
     }
 
     void handle_display() {
-        db<Agent>(TRC) << "Entrei no handle display" << endl;
+        db<Agent>(TRC) << "Agent::handle_display()" << endl;
         
         switch(method()) {
             case Message::PRINT: {
