@@ -1186,6 +1186,7 @@ void _vector_table()
         .sync_lower64:  str x30, [sp,#-8]!                                      \t\n\
                         str x29, [sp,#-8]!                                      \t\n\
                         str x28, [sp,#-8]!                                      \t\n\
+                                                                                \t\n\
                         mrs x28, CurrentEL                                      \t\n\
                         and x28, x28, #12                                       \t\n\
                         lsr x28, x28, #2                                        \t\n\
@@ -1193,6 +1194,7 @@ void _vector_table()
                         cmp x28, #2                                             \t\n\
                         beq .1                                                  \t\n\
                         ldr x29, .ic_entry                                      \t\n\
+                        blr x29                                                 \t\n\
                         b .2                                                    \t\n\
                     .1:                                                         \t\n\
                         dsb   ishst                                             \t\n\

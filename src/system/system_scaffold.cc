@@ -4,11 +4,7 @@
 #include <utility/heap.h>
 #include <machine.h>
 #include <memory.h>
-#include <process.h>
 #include <system.h>
-#include <syscall/agent.h>
-
-extern char __boot_time_system_info[];
 
 __BEGIN_SYS
 
@@ -18,26 +14,9 @@ OStream kout;
 OStream kerr;
 
 // System class attributes
-System_Info * System::_si = (Memory_Map::SYS_INFO != Memory_Map::NOT_USED) ? reinterpret_cast<System_Info *>(Memory_Map::SYS_INFO) : reinterpret_cast<System_Info *>(&__boot_time_system_info);
+System_Info * System::_si = reinterpret_cast<System_Info *>(Memory_Map::SYS_INFO);
 char System::_preheap[];
 Segment * System::_heap_segment;
 Heap * System::_heap;
 
 __END_SYS
-
-// Bindings
-extern "C" {
-    __USING_SYS;
-
-    // Libc legacy
-    void _panic() { Machine::panic(); }
-    void _exit(int s) { Thread::exit(s); for(;;); }
-    void __exit() { Thread::exit(CPU::fr()); }  // must be handled by the Page Fault handler for user-level tasks
-    void __cxa_pure_virtual() { db<void>(ERR) << "Pure Virtual method called!" << endl; }
-    void _syscall(void * m) { CPU::syscall(m); } 
-    void _sysexec(void * m) { Agent::_exec(m); } 
-    
-    // Utility-related methods that differ from kernel and user space.
-    // OStream
-    void _print(const char * s) { Display::puts(s); }
-}

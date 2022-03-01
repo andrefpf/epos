@@ -9,7 +9,7 @@ __BEGIN_SYS
 template<> struct Traits<Build>: public Traits_Tokens
 {
     // Basic configuration
-    static const unsigned int MODE = BUILTIN;
+    static const unsigned int MODE = KERNEL;
     static const unsigned int ARCHITECTURE = ARMv8;
     static const unsigned int MACHINE = Cortex;
     static const unsigned int MODEL = Raspberry_Pi3;
@@ -135,14 +135,10 @@ template<> struct Traits<Thread>: public Traits<Build>
 
 template<> struct Traits<Agent>: public Traits<Build>
 {
-    static const bool enabled = true;
-    static const bool debugged = true;
 };
 
 template<> struct Traits<Syscall>: public Traits<Build>
 {
-    static const bool enabled = true;
-    static const bool debugged = true;
 };
 
 template<> struct Traits<Scheduler<Thread>>: public Traits<Build>

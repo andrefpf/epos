@@ -6,8 +6,6 @@ __BEGIN_SYS
 
 void CPU::syscall(void * msg)
 {
-    db<Syscall>(INF) << "CPU::syscall(" << msg << ") \t Exception Level: " << CPU::el() << endl;
-
     CPU::r1(reinterpret_cast<CPU::Reg>(msg));
     CPU::svc();
 }

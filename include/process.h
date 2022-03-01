@@ -24,6 +24,7 @@ class Thread
     friend class IC;                    // for link() for priority ceiling
 
 protected:
+    static const bool multitask = Traits<System>::multitask;
     static const bool preemptive = Traits<Thread>::Criterion::preemptive;
     static const bool reboot = Traits<System>::reboot;
 
@@ -122,6 +123,7 @@ private:
 protected:
     Task * _task;
     char * _stack;
+    Segment  * _userstack;
     Context * volatile _context;
     volatile State _state;
     Queue * _waiting;
@@ -168,6 +170,23 @@ public:
         unlock();
         _main = new (SYSTEM) Thread(Thread::Configuration(Thread::READY, Thread::MAIN, Traits<Application>::STACK_SIZE, this), entry, an ...);
     }
+
+    template<typename ... Tn>
+    Task(Segment * cs, Segment * ds, int (* entry)(Tn ...), Tn ... an)
+    : _as (new (SYSTEM) Address_Space), _cs(cs), _ds(ds), _entry(entry), _code(_as->attach(_cs)), _data(_as->attach(_ds)) {
+        db<Task>(TRC) << "Task(as=" << _as << ",cs=" << _cs << ",ds=" << _ds << ",entry=" << _entry << ",code=" << _code << ",data=" << _data << ") => " << this << endl;
+
+        _main = new (SYSTEM) Thread(Thread::Configuration(Thread::READY, Thread::MAIN, Traits<Application>::STACK_SIZE, this), entry, an ...);
+    }
+
+    template<typename ... Tn>
+    Task(const Thread::Configuration & conf, Segment * cs, Segment * ds, int (* entry)(Tn ...), Tn ... an)
+    : _as (new (SYSTEM) Address_Space), _cs(cs), _ds(ds), _entry(entry), _code(_as->attach(_cs)), _data(_as->attach(_ds)) {
+        db<Task>(TRC) << "Task(as=" << _as << ",cs=" << _cs << ",ds=" << _ds << ",entry=" << _entry << ",code=" << _code << ",data=" << _data << ") => " << this << endl;
+
+        _main = new (SYSTEM) Thread(Thread::Configuration(conf.state, conf.criterion, conf.stack_size, this), entry, an ...);
+    }
+    
     ~Task();
 
     Address_Space * address_space() const { return _as; }
@@ -238,7 +257,14 @@ inline Thread::Thread(const Configuration & conf, int (* entry)(Tn ...), Tn ... 
 : _task(conf.task ? conf.task : Task::self()), _state(conf.state), _waiting(0), _joining(0), _link(this, conf.criterion)
 {
     constructor_prologue(conf.stack_size);
-    _context = CPU::init_stack(0, _stack + conf.stack_size, &__exit, entry, an ...);
+    if (multitask && !conf.stack_size) {
+        _context = CPU::init_stack(0, _stack + conf.stack_size, &__exit, entry, an ...);
+    } 
+    else {
+        _userstack = new (SYSTEM) Segment(conf.stack_size, Segment::Flags::APP);
+        CPU::Log_Addr usp = _task->address_space()->attach(_userstack);
+        _context = CPU::init_stack(usp + conf.stack_size, _stack + conf.stack_size, &__exit, entry, an ...);
+    }
     constructor_epilogue(entry, conf.stack_size);
 }
 

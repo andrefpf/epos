@@ -134,12 +134,17 @@ public:
         TTBR1_TBI                   = 0b1ULL    << 38 // ignore top byte when calculating address on TTBR1
     };
 
+    enum {
+        SVC_MODE  = FLAG_EL1 | FLAG_A | FLAG_D | FLAG_SP_ELn,
+        USER_MODE = FLAG_EL0 | FLAG_A | FLAG_D,
+    };
+
 public:
     class Context
     {
     public:
         Context(){}
-        Context(Log_Addr entry, Log_Addr exit, Log_Addr usp): _flags(FLAG_SP_ELn | FLAG_EL1 | FLAG_A | FLAG_D), _lr(exit), _pc(entry) {
+        Context(Log_Addr entry, Log_Addr exit, Log_Addr usp): _flags(SVC_MODE), _lr(exit), _pc(entry), _usp(usp) {
             if(Traits<Build>::hysterically_debugged || Traits<Thread>::trace_idle) {
                 _x0 = 0; _x1 = 1; _x2 = 2; _x3 = 3; _x4 = 4; _x5 = 5; _x6 = 6; _x7 = 7; _x8 = 8; _x9 = 9; _x10 = 10; _x11 = 11; _x12 = 12; _x13 = 13; _x14 = 14; _x15 = 15;
                 _x16 = 16; _x17 = 17; _x18 = 18; _x19 = 19; _x20 = 20; _x21 = 21; _x22 = 22; _x23 = 23; _x24 = 24; _x25 = 25; _x26 = 26; _x27 = 27; _x28 = 28; _x29 = 29;
@@ -184,6 +189,7 @@ public:
                << ",sp="  << &c
                << ",lr="  << c._lr
                << ",pc="  << c._pc
+               << ",usp=" << c._usp
                << ",psr=" << c._flags
                << "}" << dec;
             return os;
@@ -222,6 +228,7 @@ public:
         Reg _x29;
         Reg _lr;
         Reg _pc;
+        Reg _usp;
     };
 
 protected:
@@ -336,14 +343,14 @@ public:
     static void hcr(Reg r) {ASM("msr hcr_el2, %0" : : "r"(r) : );}
     static Reg  hcr() { Reg r; ASM("mrs %0, hcr_el2" : "=r"(r) :); return r; }
 
+    static Reg spsr_el1() { Reg r; ASM("mrs %0, spsr_el1" : "=r"(r) :); return r; }
+    static void spsr_el1(Reg r) { ASM("msr spsr_el1, %0" : : "r"(r) :); }
+
     static Reg spsr_el2() { Reg r; ASM("mrs %0, spsr_el2" : "=r"(r) :); return r; }
     static void spsr_el2(Reg r) { ASM("msr spsr_el2, %0" : : "r"(r) :); }
 
     static Reg esr_el1() { Reg r; ASM("mrs %0, esr_el1" : "=r"(r) :); return r; }
     static void esr_el1(Reg r) { ASM("msr esr_el1, %0" : : "r"(r) :); }
-
-    static Reg spsr_el1() { Reg r; ASM("mrs %0, spsr_el1" : "=r"(r) :); return r; }
-    static void spsr_el1(Reg r) { ASM("msr spsr_el1, %0" : : "r"(r) :); }
 
     static Reg elr_el2() { Reg r; ASM("mrs %0, elr_el2" : "=r"(r) :); return r; }
     static void elr_el2(Reg r) { ASM("msr elr_el2, %0" : : "r"(r) :); }
@@ -374,63 +381,76 @@ public:
 
 inline void ARMv8_A::Context::push(bool interrupt)
 {
-    ASM("       str   x30, [sp, #-8]!           // make room for PC             \t\n\
-                str   x30, [sp, #-8]!           // push LR                      \t\n\
-                adr   x30, .ret                 // calculate PC                 \t\n\
-                str   x30, [sp, #8]             // save PC                      \t\n\
-                ldr   x30, [sp, #0]                                             \t\n\
-                stp   x28, x29, [sp, #-16]!                                     \t\n\
-                mrs   x30, daif                                                 \t\n\
-                mov   x29, #960                                                 \t\n\
-                msr  daif, x29                                                  \t\n\
-                stp   x26, x27, [sp, #-16]!                                     \t\n\
-                stp   x24, x25, [sp, #-16]!                                     \t\n\
-                stp   x22, x23, [sp, #-16]!                                     \t\n\
-                stp   x20, x21, [sp, #-16]!                                     \t\n\
-                stp   x18, x19, [sp, #-16]!                                     \t\n\
-                stp   x16, x17, [sp, #-16]!                                     \t\n\
-                stp   x14, x15, [sp, #-16]!                                     \t\n\
-                stp   x12, x13, [sp, #-16]!                                     \t\n\
-                stp   x10, x11, [sp, #-16]!                                     \t\n\
-                stp    x8,  x9, [sp, #-16]!                                     \t\n\
-                stp    x6,  x7, [sp, #-16]!                                     \t\n\
-                stp    x4,  x5, [sp, #-16]!                                     \t\n\
-                stp    x2,  x3, [sp, #-16]!                                     \t\n\
-                stp    x0,  x1, [sp, #-16]!                                     \t\n\
-                orr   x17, x30, x30                                             \t\n\
-                mrs   x16, nzcv                                                 \t\n\
-                orr   x17, x17, x16                                             \t\n\
-                mrs   x16, CurrentEL                                            \t\n\
-                orr   x17, x17, x16                                             \t\n\
-                mrs   x16, SPSel                                                \t\n\
-                orr   x17, x17, x16                                             \t\n\
-                str   x17, [sp, #-8]!           // push PSR                     \t" : : : "cc");
+    ASM(
+        R"(
+            str   x30, [sp, #-8]!           // make room for USP
+            str   x30, [sp, #-8]!           // make room for PC
+            str   x30, [sp, #-8]!           // push LR
+            adr   x30, .ret                 // calculate PC
+            str   x30, [sp, #8]             // save PC
+            mrs   x30, SP_EL0
+            str   x30, [sp, #16]            // save USP
+            stp   x28, x29, [sp, #-16]!
+            ldr   x30, [sp, #0]
+            mrs   x30, daif
+            mov   x29, #960
+            msr  daif, x29
+            stp   x26, x27, [sp, #-16]!
+            stp   x24, x25, [sp, #-16]!
+            stp   x22, x23, [sp, #-16]!
+            stp   x20, x21, [sp, #-16]!
+            stp   x18, x19, [sp, #-16]!
+            stp   x16, x17, [sp, #-16]!
+            stp   x14, x15, [sp, #-16]!
+            stp   x12, x13, [sp, #-16]!
+            stp   x10, x11, [sp, #-16]!
+            stp    x8,  x9, [sp, #-16]!
+            stp    x6,  x7, [sp, #-16]!
+            stp    x4,  x5, [sp, #-16]!
+            stp    x2,  x3, [sp, #-16]!
+            stp    x0,  x1, [sp, #-16]!
+            orr   x17, x30, x30
+            mrs   x16, nzcv
+            orr   x17, x17, x16
+            mrs   x16, CurrentEL
+            orr   x17, x17, x16
+            mrs   x16, SPSel
+            orr   x17, x17, x16
+            str   x17, [sp, #-8]!           // push PSR
+        )" ::: "cc"
+    );
 }
 
 inline void ARMv8_A::Context::pop(bool interrupt)
 {
-    ASM("       ldr   x30, [sp], #8             // pop PSR into x30             \t\n\
-                ldp    x0,  x1, [sp], #16                                       \t\n\
-                ldp    x2,  x3, [sp], #16                                       \t\n\
-                ldp    x4,  x5, [sp], #16                                       \t\n\
-                ldp    x6,  x7, [sp], #16                                       \t\n\
-                ldp    x8,  x9, [sp], #16                                       \t\n\
-                ldp   x10, x11, [sp], #16                                       \t\n\
-                ldp   x12, x13, [sp], #16                                       \t\n\
-                ldp   x14, x15, [sp], #16                                       \t\n\
-                ldp   x16, x17, [sp], #16                                       \t\n\
-                ldp   x18, x19, [sp], #16                                       \t\n\
-                ldp   x20, x21, [sp], #16                                       \t\n\
-                ldp   x22, x23, [sp], #16                                       \t\n\
-                ldp   x24, x25, [sp], #16                                       \t\n\
-                ldp   x26, x27, [sp], #16                                       \t\n\
-                ldp   x28, x29, [sp], #16                                       \t\n\
-                msr   spsr_el1, x30                                             \t\n\
-                ldr   x30, [sp], #8             // pop LR to get to PC          \t\n\
-                ldr   x30, [sp], #8             // pop PC                       \t\n\
-                msr   ELR_EL1, x30                                              \t\n\
-                ldr   x30, [sp, #-16]           // pop LR                       \t\n\
-                eret                                                            \t" : : : "cc");
+    ASM(
+        R"(
+            ldr   x30, [sp], #8             // pop PSR into x30
+            ldp    x0,  x1, [sp], #16
+            ldp    x2,  x3, [sp], #16
+            ldp    x4,  x5, [sp], #16
+            ldp    x6,  x7, [sp], #16
+            ldp    x8,  x9, [sp], #16
+            ldp   x10, x11, [sp], #16
+            ldp   x12, x13, [sp], #16
+            ldp   x14, x15, [sp], #16
+            ldp   x16, x17, [sp], #16
+            ldp   x18, x19, [sp], #16
+            ldp   x20, x21, [sp], #16
+            ldp   x22, x23, [sp], #16
+            ldp   x24, x25, [sp], #16
+            ldp   x26, x27, [sp], #16
+            ldp   x28, x29, [sp], #16
+            msr   spsr_el1, x30
+            ldr   x30, [sp], #8             // pop LR to get to PC
+            ldr   x30, [sp], #8             // pop PC
+            msr   ELR_EL1, x30
+            ldr   x30, [sp], #8             // pop USP
+            msr   SP_EL0, x30
+            ldr   x30, [sp, #-24]           // pop LR
+            eret
+        )" ::: "cc"
+    );
 }
 
 class CPU: public ARMv8_A

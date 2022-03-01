@@ -1,36 +1,48 @@
 #include <utility/ostream.h>
-#include <syscall/message.h>
-#include <syscall/stubs.h>
+#include <synchronizer.h>
+#include <process.h>
 
 using namespace EPOS;
 
 OStream cout;
 
-void test_1() {
-    // Printa alguma coisa através de mensagens
-    Message msg(0, Message::ENTITY::DISPLAY, Message::PRINT, "Teste 1 está funcionando \n");
-    msg.act();
+int func_a();
+int func_b();
+
+int func_a() {
+    cout << "Start of func_a job" << endl;
+
+    for (int i = 0; i < 10000000; ++i) {
+        if (!(i % 100000)) {
+            cout << "Func A " << i / 100000 << endl;
+        }
+    }
+
+    cout << "End of func_a job" << endl;
+
+    return 0;
 }
 
-void test_2() {
-    // Usa o stubs common pra printar algo
-    stubs::Stubs_Common display(Message::ENTITY::DISPLAY);
-    display.invoke(Message::PRINT, "Teste 2 está funcionando \n");
-}
-
-void test_3() {
-    // usa o stub display para printar algo
-    stubs::Display display = stubs::Display();
-    display.print("Teste 3 está funcionando \n");
-}
 
 int main()
 {
-    test_1();
-    test_2();
-    test_3();
+    cout << "Hello Syscall!" << endl;
 
-    // CPU::syscall(0);
+    Thread a(&func_a);
+
+    cout << "Start of main job" << endl;
+
+    for (int i = 0; i < 10000000; ++i) {
+        if (!(i % 100000)) {
+            cout << "Main " << i / 100000 << endl;
+        }
+    }
+
+    cout << "End of main job" << endl;
+
+    a.join();
+
+    cout << "Finished!" << endl;
 
     return 0;
 }
